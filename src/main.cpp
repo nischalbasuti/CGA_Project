@@ -6,6 +6,8 @@
 #include "world.h"
 #include "body.h"
 #include "abstractGlBody.h"
+#include "sphereGlBody.h"
+#include "boxGlBody.cpp"
 
 // function definitions//////////////////////////////////////////
 void loadTexture(imageFile*, int);
@@ -58,7 +60,7 @@ void setupLighting() {
 	// Light property vectors.
 	float lightAmb[] = { 0.0, 0.0, 0.0, 1.0 };
 	float lightDifAndSpec[] = { 1.0, 1.0, 1.0, 1.0 };
-	float lightPos[] = { 5.0, -5.0, -1.0, 0.0 };
+	float lightPos[] = { 5.0, 5.0, -1.0, 0.0 };
 	float globAmb[] = { 0.2, 0.2, 0.2, 1.0 };
 
 	// Light properties.
@@ -92,40 +94,16 @@ void setupTextures() {
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }
 
-class SphereGlBody : public AbstractGlBody {
-    public:
-		SphereGlBody(float radius) {
-			this->radius = radius;
-			this->rgba[0] = 0;
-			this->rgba[1] = 1;
-			this->rgba[2] = 2;
-			this->rgba[3] = 3;
-		}
-		void setColor(float r, float g, float b, float a=1) {
-			this->rgba[0] = r;
-			this->rgba[1] = g;
-			this->rgba[2] = b;
-			this->rgba[3] = a;
-		}
-        void draw() {
-            auto quad = gluNewQuadric();
-			glColor4fv(this->rgba);
-            gluSphere(quad, radius, 40, 40);
-            // gluSphere(quad, radius, 4, 4);
-			gluDeleteQuadric(quad);
-        }
-    private:
-		float radius;
-		float rgba[4];
-};
 
 // Define bodies.
 SphereGlBody abstractGlBody(1);
+BoxGlBody boxGlBody(20,2,2);
 btScalar mass = 1;
 btScalar mass1 = 2;
+
 Body dynamicBody(&abstractGlBody, new btVector3(0, 10, 0), new btSphereShape(1), mass, false);
 Body dynamicBody1(&abstractGlBody, new btVector3(0.5, 5, 0), new btSphereShape(1), mass1, false);
-Body staticBody(&abstractGlBody, new btVector3(0.5, 0, 0), new btSphereShape(1), 0, true);
+Body staticBody(&boxGlBody, new btVector3(0.5, 0, 0), new btBoxShape(btVector3( 10,1,1 )), 0, true);
 // Initialization routine.
 void setup(void) {
 	/* glClearColor(0.0, 0.0, 0.0, 0.0); */
@@ -139,12 +117,19 @@ void setup(void) {
     setupLighting();
     /* setupTextures(); */
 
-	abstractGlBody.setColor(1,0,0);
+	abstractGlBody.setColor(1,0,0,1);
 
 	// Set coeffs of restitution.
-	dynamicBody.getRigidBody()->setRestitution(1);
+	dynamicBody.getRigidBody()->setRestitution(0.8);
 	dynamicBody1.getRigidBody()->setRestitution(0.5);
 	staticBody.getRigidBody()->setRestitution(1);
+
+	dynamicBody.getRigidBody()->setFriction(1);
+	dynamicBody1.getRigidBody()->setFriction(1);
+	staticBody.getRigidBody()->setFriction(1);
+
+	dynamicBody.getRigidBody()->setRollingFriction(0.2);
+	dynamicBody1.getRigidBody()->setRollingFriction(0.2);
 
 	// Add bodies to world.
     world.addBody(dynamicBody);
@@ -160,12 +145,15 @@ void drawScene(void) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glLoadIdentity();
 
-	gluLookAt(0.0, 0.0, 16.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+	gluLookAt(0.0, 10.0, 16.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
+	btTransform trans =  dynamicBody1.getRigidBody()->getWorldTransform();
+	// glLightfv(GL_LIGHT0, GL_POSITION, trans.getOrigin());
 	// update and draw bodies.
 	world.drawBodies();
+	// std::cout << dynamicBody1.getRigidBody()->getLinearVelocity().getX() << std::endl;
 
-    glutSwapBuffers();
+	glutSwapBuffers();
 }
 
 // TODO: properly do time step.
@@ -189,7 +177,6 @@ void resize(int w, int h) {
 	gluPerspective(60.0, (float)w / (float)h, 1.0, 50.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-
 	// glViewport(0, 0, w, h);
 	// glMatrixMode(GL_PROJECTION);
 	// glLoadIdentity();
@@ -206,8 +193,18 @@ void keyInput(unsigned char key, int x, int y) {
         case 27:
             exit(0);
             break;
+		case 'l':
+			dynamicBody1.getRigidBody()->activate(true);
+			dynamicBody.getRigidBody()->activate(true);
+			dynamicBody1.getRigidBody()->applyCentralImpulse(btVector3( 2,0,0 ));
+			break;	
+		case 'j':
+			dynamicBody1.getRigidBody()->activate(true);
+			dynamicBody.getRigidBody()->activate(true);
+			dynamicBody1.getRigidBody()->applyCentralImpulse(btVector3( -2,0,0 ));
+			break;	
         default:
-            break;
+			break;
 	}
 }
 
