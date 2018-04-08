@@ -9,6 +9,7 @@ class World {
         ~World();
         void addBody(Body &body);
         void removeBody(Body &body);
+        void update();
         void drawBodies();  // loop through all bodies and update the GlBody's transformations and draw them.
         btDiscreteDynamicsWorld* getDynamicsWorld() const;
     private:
