@@ -36,6 +36,13 @@ void World :: drawBodies() {
 		b->draw();
 	}
 }
+
+void World :: update() {
+	for(auto b : this->bodies) {
+		b->update();
+	}
+}
+
 void World :: addBody(Body &body) {
 	bodies.push_back(&body);
     this->dynamicsWorld->addRigidBody(body.getRigidBody());

@@ -13,8 +13,12 @@ class SphereGlBody : public AbstractGlBody {
     public:
 		SphereGlBody(float); 
 		void setColor(float, float, float, float);
+		void setTexture(int);
         void draw();
+		void draw(btVector3);
     private:
 		float radius;
 		float rgba[4];
+		float textureId;
+		bool isTextureBound = false;
 };

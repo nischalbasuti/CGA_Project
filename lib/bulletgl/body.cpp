@@ -52,6 +52,9 @@ void Body :: setPosition(btVector3 position) {
     this->position.setY( position.getY() );
     this->position.setZ( position.getZ() );
 
+    btTransform trans = this->rigidBody->getWorldTransform();
+    trans.setOrigin(position);
+    this->rigidBody->setWorldTransform(trans);
     this->glBody->setPosition(this->position);
 }
 void Body :: setPosition(float x, float y, float z) {
@@ -59,4 +62,8 @@ void Body :: setPosition(float x, float y, float z) {
     this->position.setY( y );
     this->position.setZ( z );
     this->glBody->setPosition(this->position);
+}
+
+const btVector3 Body :: getPosition() const{
+    return this->position;
 }
