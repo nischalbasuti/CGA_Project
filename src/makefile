@@ -7,6 +7,7 @@ LDFLAGS = -I /usr/local/include/bullet/
 # RUNTIMEDIRS = -Wl,-rpath,'$$ORIGIN/usr/local/lib'
 RUNTIMEDIRS = -Wl,-rpath,'/usr/local/lib'
 build:
+	echo "## makefile: building. ##"
 	mkdir -p $(OUTDIR)
 	$(CC) $(CFLAGS) $(INCDIRS) $(LDFLAGS) $(RUNTIMEDIRS) ./*.cpp $(BULLETGL)*.cpp ../lib/*.cpp  -o $(OUTDIR)a.out
 	echo "## makefile: running. ##"

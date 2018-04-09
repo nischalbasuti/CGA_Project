@@ -10,6 +10,7 @@
 #include "sphereGlBody.h"
 #include "boxGlBody.cpp"
 #include "planetBody.cpp"
+#include "astroidGlBody.h"
 
 #define PI 3.14
 
@@ -28,6 +29,7 @@ void animate(int);
 // global variables /////////////////////////////////////////////
 World world(0);
 static unsigned int texture[7]; // Array of texture indices.
+bool isAnimating = true;
 // end globals //////////////////////////////////////////////////
 
 void loadTexture(imageFile* image, int textureId) {
@@ -124,11 +126,11 @@ SphereGlBody planet0GlBody(2);
 SphereGlBody planet1GlBody(3);
 SphereGlBody planet2GlBody(6);
 SphereGlBody planet3GlBody(4);
-SphereGlBody astroidGlBody(1);
+AstroidGlBody astroidGlBody(1);
 
 SphereGlBody planet2AtmosphereGlBody(6.3);
 SphereGlBody sunAtmosphereGlBody(21);
-SphereGlBody backgroundGlBody(200);
+SphereGlBody backgroundGlBody(250);
 
 btScalar mass = 1;
 btScalar mass1 = 2000000;
@@ -206,27 +208,36 @@ void drawScene(void) {
 	glLoadIdentity();
 
 	// auto lookAt = btVector3(0, 0, 0);
-	/* auto lookAt = planet2Body.getPosition(); */
-	auto lookAt = astroidBody.getPosition();
+	auto lookAt = planet2Body.getPosition();
+	// auto lookAt = astroidBody.getPosition();
 	auto eye = btVector3(X, Y, Z);
-
-	if (Y > -100){
-		// X -= 0.35;
-		X = lookAt.getX() - 5;
-		Y -= 0.35;
-		Z -= 0.35;
-		/* std::cout << Y << std::endl; */
-	}
-
-	// eye.setX(lookAt.getX() - 20);
-	// eye.setY(lookAt.getY() - 20);
-	// eye.setZ(lookAt.getZ() - 20);
 
     auto velocityVector = btVector3(
 			( planet2Body.getPosition().getX()-astroidBody.getPosition().getX() ),
 			( planet2Body.getPosition().getY()-astroidBody.getPosition().getY() ),
 			( planet2Body.getPosition().getZ()-astroidBody.getPosition().getZ() )).normalize();
-	astroidBody.getRigidBody()->setLinearVelocity(velocityVector * 60);
+
+    // Move the "camera".
+	if (Z > -100) {
+		// X -= 0.35;
+		X = lookAt.getX() + 5;
+		/* Y -= 0.35; */
+		Y = lookAt.getY() + 15;
+		Z -= 0.25;
+		/* std::cout << Y << std::endl; */
+        
+        // Set velocity of the astroid.
+        astroidBody.getRigidBody()->setLinearVelocity(velocityVector * 30);
+    } else {
+        // Increase the velocity of the astroid enough to collide with planet2
+        // once the camera settles down.
+        astroidBody.getRigidBody()->setLinearVelocity(velocityVector * 60);
+    }
+
+	// eye.setX(lookAt.getX() - 20);
+	// eye.setY(lookAt.getY() - 20);
+	// eye.setZ(lookAt.getZ() - 20);
+
 	astroidBody.getRigidBody()->activate(true);
 
 	// glRotatef(planet0Body.rotationY, 0, 1, 0);
@@ -250,6 +261,12 @@ void drawScene(void) {
 	// update and draw bodies.
 	// world.update();
 	world.drawBodies();
+    astroidGlBody.drawTail();
+
+    // TODO: MAGIC NUMBERS!!!! OMG!!!
+    if(astroidBody.getPosition().distance(planet2Body.getPosition()) < 6.5 ) {
+       isAnimating = false; 
+    }
 
 	// planet2AtmosphereGlBody.draw(planet2Body.getPosition());
 	glDisable(GL_LIGHTING);
@@ -270,8 +287,7 @@ void drawScene(void) {
 	glutSwapBuffers();
 }
 
-// TODO: properly do time step.
-bool isAnimating = true;
+// TODO: Fixed time step, check if it's framerate independent.
 static int animationPeriod = 20; // Time interval between frames.
 
 // Timer function.
@@ -281,12 +297,13 @@ void animate(int value) {
 	}
 	glutTimerFunc(animationPeriod, animate, 1);
 	world.getDynamicsWorld()->stepSimulation(1 / 60.f, 10);
-	// angleY += 1;
-	planet3Body.rotationY += 0.1;
-	planet2Body.rotationY += 0.2;
-	planet1Body.rotationY += 0.3;
-	planet0Body.rotationY += 0.4;
-	moonBody.rotationY += 1;
+
+	/* planet3Body.rotationY += 0.1; */
+	/* planet2Body.rotationY += 0.2; */
+	/* planet1Body.rotationY += 0.3; */
+	/* planet0Body.rotationY += 0.4; */
+	/* moonBody.rotationY += 1; */
+
 
 	moonBody.getRigidBody()->activate(true);
 	planet0Body.getRigidBody()->activate(true);
@@ -295,6 +312,7 @@ void animate(int value) {
 	planet3Body.getRigidBody()->activate(true);
 	sunBody.getRigidBody()->activate(true);
 	
+    // Rotate bodies.
 	moonBody.getRigidBody()->setAngularVelocity(btVector3(1, 0, 0));
 	planet0Body.getRigidBody()->setAngularVelocity(btVector3(1, 0, 0));
 	planet1Body.getRigidBody()->setAngularVelocity(btVector3(1, 1, 0));
@@ -302,10 +320,13 @@ void animate(int value) {
 	planet3Body.getRigidBody()->setAngularVelocity(btVector3(1, 1, 1));
 	sunBody.getRigidBody()->setAngularVelocity(btVector3(0, 1, 0));
 
+    // Make objects revolve.
 	planet0Body.revolve(1000/4);
 	planet1Body.revolve(2000/4);
 	planet2Body.revolve(3000/4);
 	planet3Body.revolve(4000/4);
+
+    // Revolve moon around planet2.
 	float x = planet2Body.getPosition().getX();
 	float y = planet2Body.getPosition().getY();
 	float z = planet2Body.getPosition().getZ();
@@ -402,7 +423,7 @@ int main(int argc, char **argv) {
 	glutInitContextProfile(GLUT_COMPATIBILITY_PROFILE);
 
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutInitWindowSize(500, 500);
+	glutInitWindowSize(720, 480);
 	glutInitWindowPosition(100, 100);
 	glutCreateWindow("main1.cpp");
 	glutDisplayFunc(drawScene);

@@ -24,7 +24,7 @@ Body :: Body(AbstractGlBody *glBody, btVector3 *position, btCollisionShape* coll
 }
 
 Body :: ~Body() {
-	std::cout << "body destoyed" << std::endl;
+	std::cout << "body destroyed" << std::endl;
 }
 
 void Body :: update() {
