@@ -45,21 +45,23 @@ void AstroidGlBody :: draw() {
         this->drawCount += 1;
     }
 }
-void AstroidGlBody :: drawTail() {
+void AstroidGlBody :: drawTail(int textureId, float alpha=1) {
     float radius = 0.05;
+    auto quad = gluNewQuadric();
+    gluQuadricTexture(quad, GL_TRUE);
+    glBindTexture(GL_TEXTURE_2D, textureId);
     for(auto position : this->prevPositions) {
         // auto position = this->prevPositions[i];
         glEnable(GL_COLOR_MATERIAL);
-        glDisable(GL_TEXTURE);
+                glColor4f(1, 1, 1, alpha);
+        glDisable(GL_COLOR_MATERIAL);
         glPushMatrix();
             glTranslatef(position.getX(), position.getY(), position.getZ());
-            glColor4f(1, 1, 1, 0.3);
-            glutSolidSphere(radius, 20, 20); 
+            gluSphere(quad, radius, 20, 20); 
         glPopMatrix();
-        glEnable(GL_TEXTURE);
-        glDisable(GL_COLOR_MATERIAL);
         radius = radius + 0.05;
     }
+    gluDeleteQuadric(quad);
 }
 void AstroidGlBody :: draw(btVector3 position) {
     glPushMatrix();

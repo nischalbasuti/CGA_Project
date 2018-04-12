@@ -16,7 +16,7 @@ class AstroidGlBody : public AbstractGlBody {
 		void setColor(float, float, float, float);
 		void setTexture(int);
         void draw();
-        void drawTail();
+        void drawTail(int, float);
 		void draw(btVector3);
     private:
 		float radius;

@@ -6,7 +6,7 @@
 #include "getBMP.h"
 #include "abstractGlBody.h"
 
-AbstractGlBody :: AbstractGlBody() { }
+AbstractGlBody :: AbstractGlBody() = default;
 
 void AbstractGlBody :: setPosition(float x, float y, float z) {
     this->position.setX( x );
