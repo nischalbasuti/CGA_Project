@@ -30,6 +30,8 @@ void animate(int);
 World world(0);
 static unsigned int texture[7]; // Array of texture indices.
 bool isAnimating = true;
+bool isAstroidMoving = false;
+int currentScene = 1;
 // end globals //////////////////////////////////////////////////
 
 void loadTexture(imageFile* image, int textureId) {
@@ -141,11 +143,11 @@ Body sunBody(&sunGlBody, new btVector3(0, 0, 0), new btSphereShape(20), mass1, f
 PlanetBody moonBody(90, &moonGlBody, new btVector3(0, 0, 90), new btSphereShape(2), mass, false);
 PlanetBody planet0Body(30, &planet0GlBody, new btVector3(0, 0, 30), new btSphereShape(2), mass, false);
 PlanetBody planet1Body(60, &planet1GlBody, new btVector3(0, 0, 60), new btSphereShape(3), mass, false);
-PlanetBody planet2Body(80, &planet2GlBody, new btVector3(0, 0, 80), new btSphereShape(6), mass, false);
-PlanetBody planet3Body(100, &planet3GlBody, new btVector3(0, 0, 100), new btSphereShape(4), mass, false);
-PlanetBody astroidBody(150, &astroidGlBody, new btVector3(-150, 150, -150), new btSphereShape(1), mass, false);
+PlanetBody planet2Body(100, &planet2GlBody, new btVector3(0, 0, 80), new btSphereShape(6), mass, false);
+PlanetBody planet3Body(200, &planet3GlBody, new btVector3(0, 0, 100), new btSphereShape(4), mass, false);
+PlanetBody astroidBody(150, &astroidGlBody, new btVector3(-80, 80, 100), new btSphereShape(1), mass, false);
 
-PlanetBody cameraBody(150, &cameraGlBody, new btVector3(150, 150, 150), new btSphereShape(1), mass, false);
+PlanetBody cameraBody(150, &cameraGlBody, new btVector3(-0, 0, 0), new btSphereShape(1), mass, false);
 // Initialization routine.
 void setup() {
 	glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -195,9 +197,6 @@ void setup() {
 	world.addBody(astroidBody);
     world.addBody(cameraBody);
 
-	astroidBody.getRigidBody()->setLinearVelocity(btVector3(0-20,0-20,-20));
-	astroidBody.getRigidBody()->activate(true);
-
 	animate(1);
 }
 
@@ -205,57 +204,38 @@ float angleX = 0;
 float angleY = 0;
 float angleZ = 0;
 
-float X=100, Y=100, Z=100;
-// Drawing routine.
-void drawScene() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glLoadIdentity();
+int globalTimeStep = 0;
 
-	// auto lookAt = btVector3(0, 0, 0);
+// Drawing routine.
+void drawSceneOne() {
+    std::cout << globalTimeStep << std::endl;
+    if(globalTimeStep >= 988) {
+        isAstroidMoving = true;
+    }
 	auto lookAt = planet2Body.getPosition();
-	// auto lookAt = astroidBody.getPosition();
-	auto eye = btVector3(X, Y, Z);
+	auto eye = cameraBody.getPosition();
 
     auto velocityVector = btVector3(
-			( planet2Body.getPosition().getX()-astroidBody.getPosition().getX() ),
-			( planet2Body.getPosition().getY()-astroidBody.getPosition().getY() ),
-			( planet2Body.getPosition().getZ()-astroidBody.getPosition().getZ() )).normalize();
+            ( planet2Body.getFuturePosition(8).getX()-astroidBody.getPosition().getX() ),
+			( planet2Body.getFuturePosition(8).getY()-astroidBody.getPosition().getY() ),
+			( planet2Body.getFuturePosition(8).getZ()-astroidBody.getPosition().getZ() )).normalize();
 
     // Move the "camera".
-	if (Z > -100) {
-		// X = lookAt.getX() + 5;
-		// Y = lookAt.getY() + 15;
-        Y = 100;
-        X = 100;
-		Z -= 0.25;
-        
-        // Set velocity of the astroid.
-        astroidBody.getRigidBody()->setLinearVelocity(velocityVector * 30);
-        // cameraBody.setPosition(eye);
-    } else {
-        // Increase the velocity of the astroid enough to collide with planet2
-        // once the camera settles down.
+	if (isAstroidMoving) {
+        astroidBody.getRigidBody()->activate(true);
         astroidBody.getRigidBody()->setLinearVelocity(velocityVector * 60);
-        // cameraBody.getRigidBody()->activate(true);
-        // auto velocityVectorCamera = btVector3(
-        //         ( astroidBody.getPosition().getX()-cameraBody.getPosition().getX() ),
-        //         ( astroidBody.getPosition().getY()-cameraBody.getPosition().getY() ),
-        //         ( astroidBody.getPosition().getZ()-cameraBody.getPosition().getZ() )).normalize();
-        // cameraBody.getRigidBody()->setLinearVelocity(velocityVectorCamera*35);
-        // eye = cameraBody.getPosition();
     }
-    if (Z < -60) {
-        cameraBody.getRigidBody()->activate(true);
-        auto velocityVectorCamera = btVector3(
-                ( astroidBody.getPosition().getX()-cameraBody.getPosition().getX() ),
-                ( astroidBody.getPosition().getY()-cameraBody.getPosition().getY() ),
-                ( astroidBody.getPosition().getZ()-cameraBody.getPosition().getZ() )).normalize();
-        cameraBody.getRigidBody()->setLinearVelocity(velocityVectorCamera*50);
-        eye = cameraBody.getPosition();
+    auto velocityVectorCamera = btVector3(
+            ( astroidBody.getPosition().getX()-cameraBody.getPosition().getX() + 5),
+            ( astroidBody.getPosition().getY()-cameraBody.getPosition().getY() - 0),
+            ( astroidBody.getPosition().getZ()-cameraBody.getPosition().getZ() + 5)).normalize();
+    eye = cameraBody.getPosition();
+    cameraBody.getRigidBody()->activate(true);
+    if (isAstroidMoving) {
+        cameraBody.getRigidBody()->setLinearVelocity(velocityVectorCamera*60);
     }
     else {
-        cameraBody.setPosition(eye);
+        cameraBody.getRigidBody()->setLinearVelocity(velocityVectorCamera*10);
     }
     gluLookAt(
             eye.getX(), eye.getY(), eye.getZ(),
@@ -263,19 +243,12 @@ void drawScene() {
             0.0, 1.0, 0.0
             );
 
-	astroidBody.getRigidBody()->activate(true);
 
 	glRotatef(angleX, 1, 0, 0);
 	glRotatef(angleY, 0, 1, 0);
 	glRotatef(angleZ, 0, 0, 1);
 
-	float lightPos0[4] = {0,0,0,1};
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
-	float lightPos1[4] = {0,0,0,1};
-	glLightfv(GL_LIGHT1, GL_POSITION, lightPos1);
-
 	// update and draw bodies.
-	// world.update();
 	world.drawBodies();
 
     // astroidBody and planet2Body collide
@@ -283,6 +256,7 @@ void drawScene() {
     if(astroidBody.getPosition().distance(planet2Body.getPosition()) < 6.5 ) {
         // Zoom into earth 
         // TODO: cut to diffrent scene.
+        currentScene = 2;
         cameraBody.getRigidBody()->activate(true);
         auto velocityVectorCamera = btVector3(
                 ( astroidBody.getPosition().getX()-cameraBody.getPosition().getX() ),
@@ -291,7 +265,7 @@ void drawScene() {
         cameraBody.getRigidBody()->setLinearVelocity(velocityVectorCamera*100);
         eye = cameraBody.getPosition();
        // isAnimating = false; 
-    } else {
+    } else if(isAstroidMoving){
         astroidGlBody.drawTail(1, 0.5);
     }
 
@@ -307,7 +281,26 @@ void drawScene() {
 	sunAtmosphereGlBody.draw(sunBody.getPosition());
 	backgroundGlBody.draw();
 	glEnable(GL_LIGHTING);
+}
 
+void drawSceneTwo() {
+    sunGlBody.draw();
+}
+
+void drawScene() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glLoadIdentity();
+    switch (currentScene) {
+        case 1:
+            drawSceneOne();
+            break;
+        case 2:
+            drawSceneTwo();
+            break;
+        default:
+            std::cout << "scene not defined." << std::endl;
+    }
 	glutSwapBuffers();
 }
 
@@ -319,6 +312,7 @@ void animate(int value) {
 	if (!isAnimating) {
 		return;
 	}
+    globalTimeStep += 1;
 	glutTimerFunc(animationPeriod, animate, 1);
 	world.getDynamicsWorld()->stepSimulation(1 / 60.f, 10);
 
@@ -374,7 +368,6 @@ void keyInput(unsigned char key, int x, int y) {
     x = 0;
     y = 0;
 
-	// float Z = ( ( Y-y1 ) / m ) - z1;
 	switch (key) {
         case 27:
             exit(0);
@@ -385,18 +378,9 @@ void keyInput(unsigned char key, int x, int y) {
 				animate(1);
 			}
 			break;
-		case 'w':
-			X-=1;
-			Y-=1;
-			Z-=1;
-			glutPostRedisplay();
-			break;
-		case 's':
-			Y+=1;
-			X+=1;
-			Z+=1;
-			glutPostRedisplay();
-			break;
+        case 'p':
+            isAstroidMoving = true;
+            break;
 		case 'l':
 			// planetBody.getRigidBody()->applyCentralImpulse(btVector3( 2,0,0 ));
 			break;	
