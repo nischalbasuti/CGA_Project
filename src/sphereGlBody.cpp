@@ -18,6 +18,26 @@ void SphereGlBody :: setTexture(int textureId){
     this->textureId = textureId;
     this->isTextureBound = true;
 }
+void SphereGlBody :: draw(float r) {
+    glPushMatrix();
+    glRotatef(90,0,0,1);
+    auto quad = gluNewQuadric();
+    if(this->isTextureBound) {
+        glEnable(GL_COLOR_MATERIAL);
+            glColor4f(1,1,1,this->rgba[3]);
+            // glColor4f(1,1,1,1);
+        glDisable(GL_COLOR_MATERIAL);
+        gluQuadricTexture(quad, GL_TRUE);
+        glBindTexture(GL_TEXTURE_2D, this->textureId);
+    } else {
+        glEnable(GL_COLOR_MATERIAL);
+            glColor4fv(this->rgba);
+        glDisable(GL_COLOR_MATERIAL);
+    }
+    gluSphere(quad, r, 40, 40);
+    gluDeleteQuadric(quad);
+    glPopMatrix();
+}
 void SphereGlBody :: draw() {
     glPushMatrix();
     glRotatef(90,0,0,1);

@@ -15,6 +15,7 @@
 #define PI 3.14
 
 // function definitions//////////////////////////////////////////
+bool isWire = false;
 void loadTexture(imageFile*, int);
 void loadTextures();
 void setupLighting();
@@ -208,7 +209,6 @@ int globalTimeStep = 0;
 
 // Drawing routine.
 void drawSceneOne() {
-    std::cout << globalTimeStep << std::endl;
     if(globalTimeStep >= 988) {
         isAstroidMoving = true;
     }
@@ -264,14 +264,14 @@ void drawSceneOne() {
                 ( astroidBody.getPosition().getZ()-cameraBody.getPosition().getZ() )).normalize();
         cameraBody.getRigidBody()->setLinearVelocity(velocityVectorCamera*100);
         eye = cameraBody.getPosition();
-       // isAnimating = false; 
     } else if(isAstroidMoving){
         astroidGlBody.drawTail(1, 0.5);
     }
 
     // cameraBody and planet2Body collide
     if(cameraBody.getPosition().distance(planet2Body.getPosition()) < 6.25 ) {
-       isAnimating = false; 
+       // isAnimating = false; 
+       astroidBody.setPosition(0,0,0);
     }
 
 	// planet2AtmosphereGlBody.draw(planet2Body.getPosition());
@@ -283,8 +283,244 @@ void drawSceneOne() {
 	glEnable(GL_LIGHTING);
 }
 
+// Control points for the texture coordinates Bezier surface.
+static float texturePoints[2][2][2] =
+{
+	{ { 0.0, 0.0 },{ 0.0, 1.0 } },
+	{ { 1.0, 0.0 },{ 1.0, 1.0 } }
+};
+float height1 = 1.0f;
+float height2 = 2.0f;
+float pettleControlPoints[16][3] = {
+    {0.0f,0.0f,0.0f}, { 1.0f,0.0f,height2},
+    {2.0f,0.0f,0.0f},  {3.0f,0.0f,0.0f},     
+    {0.0f,1.0f,height2},  {1.0f,1.0f,height1},
+    {2.0f,1.0f,0.0f},  {3.0f,1.0f,0.0f},     
+    {0.0f,2.0f,0.0f},  {1.0f,2.0f,0.0f},
+    {2.0f-2,2.0f, 0.0f},  {3.0f,2.0f,0.0f},
+    {0.0f,3.0f,0.0f},  {1.0f,3.0f,0.0f},
+    {2.0f,3.0f,0.0f},   {3.0f,3.0f,0.0f}
+};    
+float pettle2ControlPoints[16][3] = {
+    {0.0f,0.0f,0.0f},  {1.0f,0.0f,0.0f},
+    {2.0f,0.0f,2.0f},  {3.0f,0.0f,0.0f},     
+    {0.0f,1.0f,0.0f},  {1.0f,1.0f,1.5f},
+    {2.0f+8,1.0f,0.0f},  {3.0f,1.0f+1,0.0f},     
+    {0.0f,2.0f,2.0f},  {1.0f,2.0f+8,4.0f},
+    {2.0f,2.0f,50.0f},  {3.0f,2.0f,2.0f},
+    {0.0f,3.0f,0.0f},  {1.0f,3.0f+2,0.0f},
+    {2.0f,3.0f,2.0f},  {3.0f,3.0f,200.0f}
+};    
+float leafControlPoints[16][3] = {
+    {0.0f,0.0f,0.0f},  {1.0f,0.0f,0.0f},
+    {2.0f,0.0f,2.0f},  {3.0f,0.0f,0.0f},     
+    {0.0f,1.0f,0.0f},  {1.0f,1.0f,1.5f},
+    {2.0f+8,1.0f,0.0f},  {3.0f,1.0f+1,0.0f},     
+    {0.0f,2.0f,2.0f},  {1.0f,2.0f+8,4.0f},
+    {2.0f,2.0f,20.0f},  {3.0f,2.0f,2.0f},
+    {0.0f,3.0f,0.0f},  {1.0f,3.0f+2,0.0f},
+    {2.0f,3.0f,2.0f},  {3.0f,3.0f,200.0f}
+};    
+
+void drawPettle(
+        float *cp,
+        float zAngle = 0,
+        float x=0,
+        float y=0,
+        float z=0,
+        int textureIndex=0,
+        float alpha = 1) {
+	// Specify and enable the Bezier curve.
+    // Control points for the texture coordinates Bezier surface.
+	glEnable(GL_MAP2_VERTEX_3);
+	glMapGrid2f(20, 0.0, 1.0, 20, 0.0, 1.0);
+
+	// Draw the Bezier curve by defining a sample grid and evaluating on it.
+	// Enable Bezier surface with texture co-ordinates generation.
+    glMap2f(GL_MAP2_VERTEX_3, 0.0f, 1.0f, 3 , 4, 0.0f, 1.0f, 12, 4, cp);
+	glEnable(GL_MAP2_VERTEX_3);
+	glMap2f(GL_MAP2_TEXTURE_COORD_2, 0, 1, 2, 2, 0, 1, 4, 2, texturePoints[0][0]);
+	glEnable(GL_MAP2_TEXTURE_COORD_2);
+
+	// Map the texture onto the blade Bezier surface.
+	glBindTexture(GL_TEXTURE_2D, texture[textureIndex]);
+
+    // Set the color, needed for transulcency
+    glEnable(GL_COLOR_MATERIAL);
+        glColor4f(1, 1, 1, alpha);
+    glDisable(GL_COLOR_MATERIAL);
+
+    glPushMatrix();
+        glTranslatef(x, y, z);
+        glRotatef(zAngle, 0, 0, 1);
+        if(isWire) {
+            glEvalMesh2(GL_LINE, 0, 5, 0, 5);
+        }
+        else {
+            // Enable texturing and filled polygon mode.
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                glEvalMesh2(GL_FILL, 0, 5, 0, 5);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
+    glPopMatrix();
+}
+
+void drawFlower(float pistilRadius, float stemRadius, float stemHeight,
+                GLUquadric* quad,
+                float xPos = 0, float yPos = 0, float zPos = 0) {
+    glTranslatef(xPos, yPos, zPos);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    if(isWire)
+        gluQuadricDrawStyle(quad, GLU_LINE);
+    else
+        gluQuadricDrawStyle(quad, GLU_FILL);
+    gluQuadricTexture(quad, GL_TRUE);
+    /* // Draw pistil............................................................. */
+    glEnable(GL_COLOR_MATERIAL);
+        glColor4f(1 , 1, 1, 1.0);
+    glDisable(GL_COLOR_MATERIAL);
+
+
+        glBindTexture(GL_TEXTURE_2D, texture[3]);
+
+        gluSphere(quad, pistilRadius, 10, 10);
+
+
+    // Draw Stem...............................................................
+    glEnable(GL_COLOR_MATERIAL);
+        glColor4f(1 , 1, 1, 0.8);
+    glDisable(GL_COLOR_MATERIAL);
+        glPushMatrix();
+            glTranslatef(0, 0, -stemHeight);
+
+            glBindTexture(GL_TEXTURE_2D, texture[1]);
+            
+            gluCylinder(quad, stemRadius, stemRadius, stemHeight, 10, 10);
+        glPopMatrix();
+    gluDeleteQuadric(quad);
+
+    // Draw pettles along the parameter for the pistil.........................
+    float t = 0;
+    int count = 16;
+    count = 1;
+    count = 8;
+    float x[count];
+    float y[count];
+    float z[count];
+    float angle[count];
+    float R = pistilRadius;
+
+    for (int i = 0; i < count; i++) {
+        angle[i] = t * 57.2958; //convert to degrees
+        x[i] = R * cos(t);
+        y[i] = R * sin(t);
+        z[i] = 0;
+        t += 2 * PI / (float)count;
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        drawPettle(pettle2ControlPoints[0], count/2 + angle[i], x[i], y[i], z[i], 1, 0.8);
+        drawPettle(leafControlPoints[0], count/2 + angle[i] + 15, x[i], y[i], z[i], 2);
+        drawPettle(pettleControlPoints[0], count/2 + angle[i], x[i], y[i], z[i], 0, 0.8);
+    }
+}
+
+float pistilRadius = 0.25;
+float stemRadius = 0.10;
+float stemHeight = 3;
+void drawFlowerAndReflection(float x, float y, float z) {
+    glPushMatrix();
+        glTranslatef(x, y, z);
+        drawFlower(pistilRadius, stemRadius, stemHeight, gluNewQuadric());
+
+        glPushMatrix();
+            glTranslatef(0, 0, -stemHeight*2);
+            glRotatef(180, 1, 0, 0);
+            drawFlower(pistilRadius, stemRadius, stemHeight, gluNewQuadric());
+        glPopMatrix();
+    glPopMatrix();
+}
+
+float astroidPosition = 150;
+float explotionRadius = 1.0f;
+bool toDraw = true;
+float z = 10;
 void drawSceneTwo() {
-    sunGlBody.draw();
+	glEnable(GL_LIGHT0); // Enable particular light source.
+	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_FALSE); // Enable local viewpoint.
+
+	glEnable(GL_LIGHT1); // Enable particular light source.
+	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_FALSE); // Enable local viewpoint.
+
+    // setupSceneTwoLighting(); // find a more effecient way to do this.
+    // sunGlBody.draw(); //use as placeholder explosion.
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+
+	gluLookAt(0.0, 0.0, z, astroidPosition, astroidPosition, -astroidPosition, 0.0, 1.0, 0.0);
+
+    if(z < 27) {
+        z += 0.1;
+    }
+
+    if(astroidPosition > 0) {
+        astroidBody.setPosition(astroidPosition,astroidPosition,-astroidPosition);
+        astroidGlBody.draw();
+        astroidGlBody.drawTail(1, 0.5);
+        astroidPosition-=1;
+    } else{
+        sunGlBody.draw(explotionRadius);
+        explotionRadius += 0.5;
+    }
+
+    angleY = 180;
+    angleX = 100;
+    // std::cout << angleX << " ";
+    // std::cout << angleY << " ";
+    // std::cout << angleZ << std::endl;
+
+    backgroundGlBody.draw();
+    backgroundGlBody.setTexture(6);
+
+    glRotatef(angleX, 1.0, 0.0, 0.0);
+    glRotatef(angleY, 0.0, 1.0, 0.0);
+    glRotatef(angleZ, 0.0, 0.0, 1.0);
+
+    std::cout << explotionRadius << std::endl;
+    // Draw some flowers and their "reflections".
+    if(explotionRadius < 17){
+        drawFlowerAndReflection(0,0,0);
+        drawFlowerAndReflection(12,0,0);
+        drawFlowerAndReflection(-12,0,0);
+        drawFlowerAndReflection(0,10,0);
+        drawFlowerAndReflection(0,-10,0);
+
+        drawFlowerAndReflection(10,14,0);
+        drawFlowerAndReflection(-10,14,0);
+        drawFlowerAndReflection(16,12,0);
+        drawFlowerAndReflection(-16,12,0);
+
+        drawFlowerAndReflection(10,-14,0);
+        drawFlowerAndReflection(-10,-14,0);
+        drawFlowerAndReflection(16,-12,0);
+        drawFlowerAndReflection(-16,-12,0);
+    }
+
+    // Draw the "reflective" surface.
+    glEnable(GL_COLOR_MATERIAL);
+        glColor4f(1.0 , 1.0, 1.0, 0.8); // Make transparent to display "reflections".
+    glDisable(GL_COLOR_MATERIAL);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBindTexture(GL_TEXTURE_2D, texture[1]);
+    glTranslatef(0, -50, 0);
+    glBegin(GL_POLYGON);
+        glNormal3f(0,0,1); glTexCoord2f(0.0, 0.0); glVertex3f(-200.0, 0.0, -stemHeight);
+        glNormal3f(0,1,0); glTexCoord2f(1.0, 0.0); glVertex3f(200.0, 0.0, -stemHeight);
+        glNormal3f(1,0,0); glTexCoord2f(1.0, 1.0); glVertex3f(200.0, 240.0, -stemHeight);
+        glNormal3f(0,0,1); glTexCoord2f(0.0, 1.0); glVertex3f(-200.0, 240.0, -stemHeight);
+    glEnd();
+
 }
 
 void drawScene() {
@@ -313,6 +549,8 @@ void animate(int value) {
 		return;
 	}
     globalTimeStep += 1;
+    std::cout << globalTimeStep << std::endl;
+
 	glutTimerFunc(animationPeriod, animate, 1);
 	world.getDynamicsWorld()->stepSimulation(1 / 60.f, 10);
 

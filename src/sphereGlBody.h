@@ -15,6 +15,7 @@ class SphereGlBody : public AbstractGlBody {
 		void setColor(float, float, float, float);
 		void setTexture(int);
         void draw();
+        void draw(float);
 		void draw(btVector3);
     private:
 		float radius;
