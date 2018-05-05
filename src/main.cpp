@@ -29,96 +29,105 @@ void animate(int);
 
 // global variables /////////////////////////////////////////////
 World world(0);
-static unsigned int texture[7]; // Array of texture indices.
+static unsigned int texture[11]; // Array of texture indices.
 bool isAnimating = true;
 bool isAstroidMoving = false;
 int currentScene = 1;
 // end globals //////////////////////////////////////////////////
 
 void loadTexture(imageFile* image, int textureId) {
-	// Bind can label image to texture[textureId]. 
-	glBindTexture(GL_TEXTURE_2D, texture[textureId]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width, image->height, 0,
-		         GL_RGBA, GL_UNSIGNED_BYTE, image->data);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // Bind can label image to texture[textureId].
+    glBindTexture(GL_TEXTURE_2D, texture[textureId]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width, image->height, 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, image->data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
 // Load external textures.
 void loadTextures() {
-	// Local storage for bmp image data.
-	imageFile *image[7];
+    // Local storage for bmp image data.
+    imageFile *image[11];
 
-	// Load the images.
-	image[0] = getBMP("../res/textures/planet0.bmp");
-	image[1] = getBMP("../res/textures/planet1.bmp");
-	image[2] = getBMP("../res/textures/planet2.bmp");
-	image[3] = getBMP("../res/textures/planet3.bmp");
-	image[4] = getBMP("../res/textures/sun.bmp");
-	image[5] = getBMP("../res/textures/sky.bmp");
-	// image[6] = getBMP("../res/textures/crab_nebula.bmp");
-	image[6] = getBMP("../res/textures/milky_way.bmp");
-	loadTexture(image[0], 0);
-	loadTexture(image[1], 1);
-	loadTexture(image[2], 2);
-	loadTexture(image[3], 3);
-	loadTexture(image[4], 4);
-	loadTexture(image[5], 5);
-	loadTexture(image[6], 6);
+    // Load the images.
+    image[0] = getBMP("../res/textures/planet0.bmp");
+    image[1] = getBMP("../res/textures/planet1.bmp");
+    image[2] = getBMP("../res/textures/planet2.bmp");
+    image[3] = getBMP("../res/textures/planet3.bmp");
+    image[4] = getBMP("../res/textures/sun.bmp");
+    image[5] = getBMP("../res/textures/sky.bmp");
+    image[6] = getBMP("../res/textures/milky_way.bmp");
+
+    image[7] = getBMP("../res/textures/pistil.bmp");
+    image[8] = getBMP("../res/textures/pettle.bmp");
+    image[9] = getBMP("../res/textures/leaf.bmp");
+    image[10] = getBMP("../res/textures/green_leaf.bmp");
+
+    loadTexture(image[0], 0);
+    loadTexture(image[1], 1);
+    loadTexture(image[2], 2);
+    loadTexture(image[3], 3);
+    loadTexture(image[4], 4);
+    loadTexture(image[5], 5);
+    loadTexture(image[6], 6);
+    loadTexture(image[7], 7);
+    loadTexture(image[8], 8);
+    loadTexture(image[9], 9);
+    loadTexture(image[10], 10);
 }
 
 void setupLighting() {
-	// Turn on OpenGL lighting.
-	glEnable(GL_LIGHTING);
+    // Turn on OpenGL lighting.
+    glEnable(GL_LIGHTING);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
-	// Light property vectors.
-	float lightAmb[] = { 0.0, 0.0, 0.0, 1.0 };
-	float lightDifAndSpec[] = { 1.0, 1.0, 1.0, 1.0 };
-	float lightPos[] = { 0.0, 0.0, 1.0, 0.0 };
-	float globAmb[] = { 0.2, 0.2, 0.2, 1.0 };
+    // Light property vectors.
+    float lightAmb[] = { 0.0, 0.0, 0.0, 1.0 };
+    float lightDifAndSpec[] = { 1.0, 1.0, 1.0, 1.0 };
+    float lightPos[] = { 0.0, 0.0, 1.0, 0.0 };
+    float globAmb[] = { 0.2, 0.2, 0.2, 1.0 };
 
-	// Light properties.
-	glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmb);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDifAndSpec);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, lightDifAndSpec);
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+    // Light properties.
+    glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmb);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDifAndSpec);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, lightDifAndSpec);
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
-	glEnable(GL_LIGHT0); // Enable particular light source.
-	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globAmb); // Global ambient light.
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE); // Enable two-sided lighting.
-	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // Enable local viewpoint.
-	glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR); // Enable separate specular light calculation.
+    glEnable(GL_LIGHT0); // Enable particular light source.
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globAmb); // Global ambient light.
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE); // Enable two-sided lighting.
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // Enable local viewpoint.
+    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR); // Enable separate specular light calculation.
 
-	// Light properties.
-	glLightfv(GL_LIGHT1, GL_AMBIENT, lightAmb);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, lightDifAndSpec);
-	glLightfv(GL_LIGHT1, GL_SPECULAR, lightDifAndSpec);
-	glLightfv(GL_LIGHT1, GL_POSITION, lightPos);
+    // Light properties.
+    glLightfv(GL_LIGHT1, GL_AMBIENT, lightAmb);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, lightDifAndSpec);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, lightDifAndSpec);
+    glLightfv(GL_LIGHT1, GL_POSITION, lightPos);
 
-	glEnable(GL_LIGHT1); // Enable particular light source.
-	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globAmb); // Global ambient light.
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE); // Enable two-sided lighting.
-	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // Enable local viewpoint.
-	glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR); // Enable separate specular light calculation.
+    glEnable(GL_LIGHT1); // Enable particular light source.
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globAmb); // Global ambient light.
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE); // Enable two-sided lighting.
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // Enable local viewpoint.
+    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR); // Enable separate specular light calculation.
 
-	// Material property vectors.
-	float matAmbAndDif[] = { 1.0, 1.0, 1.0, 1.0 };
-	float matSpec[] = { 1.0, 1.0, 1.0, 1.0 };
-	float matShine[] = { 100.0 };
+    // Material property vectors.
+    float matAmbAndDif[] = { 1.0, 1.0, 1.0, 1.0 };
+    float matSpec[] = { 1.0, 1.0, 1.0, 1.0 };
+    float matShine[] = { 100.0 };
 
-	// Material properties.
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matAmbAndDif);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, matShine);
+    // Material properties.
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matAmbAndDif);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, matShine);
 }
 
 void setupTextures() {
-	glGenTextures(6, texture); // generate texture ids
-	loadTextures(); // load external textures
+    glGenTextures(11, texture); // generate texture ids
+    loadTextures(); // load external textures
 
-	// Specify how texture values combine with current surface color values.
+    // Specify how texture values combine with current surface color values.
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }
 
@@ -148,57 +157,57 @@ PlanetBody planet2Body(100, &planet2GlBody, new btVector3(0, 0, 80), new btSpher
 PlanetBody planet3Body(200, &planet3GlBody, new btVector3(0, 0, 100), new btSphereShape(4), mass, false);
 PlanetBody astroidBody(150, &astroidGlBody, new btVector3(-80, 80, 100), new btSphereShape(1), mass, false);
 
-PlanetBody cameraBody(150, &cameraGlBody, new btVector3(-0, 0, 0), new btSphereShape(1), mass, false);
+PlanetBody cameraBody(150, &cameraGlBody, new btVector3(-20, 20, -20), new btSphereShape(1), mass, false);
 // Initialization routine.
 void setup() {
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	// glClearColor(1.0, 1.0, 1.0, 0.0);
-	// glClearColor(25.0/255.0, 25.0/255.0, 112.0/255.0, 0.0);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    // glClearColor(1.0, 1.0, 1.0, 0.0);
+    // glClearColor(25.0/255.0, 25.0/255.0, 112.0/255.0, 0.0);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-	glEnable(GL_TEXTURE_2D);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	setupLighting();
+    setupLighting();
     setupTextures();
 
-	// Set colors of glBodies
-	planet0GlBody.setColor(0, 0, 1, 1);
-	planet1GlBody.setColor(0, 1, 1, 1);
-	planet2GlBody.setColor(1, 0, 1, 1);
-	planet3GlBody.setColor(1, 1, 0, 1);
-	sunGlBody.setColor(255.f/255.f, 140.f/255.f, 0.f, 0.8f);
-	astroidGlBody.setColor(1,1,1,1);
-	planet2AtmosphereGlBody.setColor(0.f, 0.f, 0.f, 0.2);
-	sunAtmosphereGlBody.setColor(0.f, 0.f, 0.f, 0.3f);
-	backgroundGlBody.setColor(0.f, 0.f, 0.f, 0.3f);
-	cameraGlBody.setColor(0.f, 0.f, 0.f, 0.0f);
+    // Set colors of glBodies
+    planet0GlBody.setColor(0, 0, 1, 1);
+    planet1GlBody.setColor(0, 1, 1, 1);
+    planet2GlBody.setColor(1, 0, 1, 1);
+    planet3GlBody.setColor(1, 1, 0, 1);
+    sunGlBody.setColor(255.f/255.f, 140.f/255.f, 0.f, 0.8f);
+    astroidGlBody.setColor(1,1,1,1);
+    planet2AtmosphereGlBody.setColor(0.f, 0.f, 0.f, 0.2);
+    sunAtmosphereGlBody.setColor(0.f, 0.f, 0.f, 0.3f);
+    backgroundGlBody.setColor(0.f, 0.f, 0.f, 0.3f);
+    cameraGlBody.setColor(0.f, 0.f, 0.f, 0.0f);
 
-	// Set textures of glBodies
-	planet0GlBody.setTexture(texture[0]);
-	planet1GlBody.setTexture(texture[1]);
-	planet2GlBody.setTexture(texture[2]);
-	planet3GlBody.setTexture(texture[3]);
-	sunGlBody.setTexture(texture[4]);
-	moonGlBody.setTexture(texture[0]);
-	astroidGlBody.setTexture(texture[0]);
-	planet2AtmosphereGlBody.setTexture(texture[5]);
-	sunAtmosphereGlBody.setTexture(texture[4]);
-	backgroundGlBody.setTexture(texture[6]);
-	cameraGlBody.setTexture(texture[6]);
+    // Set textures of glBodies
+    planet0GlBody.setTexture(texture[0]);
+    planet1GlBody.setTexture(texture[1]);
+    planet2GlBody.setTexture(texture[2]);
+    planet3GlBody.setTexture(texture[3]);
+    sunGlBody.setTexture(texture[4]);
+    moonGlBody.setTexture(texture[0]);
+    astroidGlBody.setTexture(texture[0]);
+    planet2AtmosphereGlBody.setTexture(texture[5]);
+    sunAtmosphereGlBody.setTexture(texture[4]);
+    backgroundGlBody.setTexture(texture[6]);
+    cameraGlBody.setTexture(texture[6]);
 
-	// Add bodies to world.
+    // Add bodies to world.
     world.addBody(sunBody);
     world.addBody(planet0Body);
     world.addBody(planet1Body);
     world.addBody(planet2Body);
     world.addBody(planet3Body);
-	world.addBody(moonBody);
-	world.addBody(astroidBody);
+    world.addBody(moonBody);
+    world.addBody(astroidBody);
     world.addBody(cameraBody);
 
-	animate(1);
+    animate(1);
 }
 
 float angleX = 0;
@@ -209,19 +218,19 @@ int globalTimeStep = 0;
 
 // Drawing routine.
 void drawSceneOne() {
-    if(globalTimeStep >= 988) {
+    if(globalTimeStep >= 970) {
         isAstroidMoving = true;
     }
-	auto lookAt = planet2Body.getPosition();
-	auto eye = cameraBody.getPosition();
+    auto lookAt = planet2Body.getPosition();
+    auto eye = cameraBody.getPosition();
 
     auto velocityVector = btVector3(
             ( planet2Body.getFuturePosition(8).getX()-astroidBody.getPosition().getX() ),
-			( planet2Body.getFuturePosition(8).getY()-astroidBody.getPosition().getY() ),
-			( planet2Body.getFuturePosition(8).getZ()-astroidBody.getPosition().getZ() )).normalize();
+            ( planet2Body.getFuturePosition(8).getY()-astroidBody.getPosition().getY() ),
+            ( planet2Body.getFuturePosition(8).getZ()-astroidBody.getPosition().getZ() )).normalize();
 
     // Move the "camera".
-	if (isAstroidMoving) {
+    if (isAstroidMoving) {
         astroidBody.getRigidBody()->activate(true);
         astroidBody.getRigidBody()->setLinearVelocity(velocityVector * 60);
     }
@@ -244,12 +253,12 @@ void drawSceneOne() {
             );
 
 
-	glRotatef(angleX, 1, 0, 0);
-	glRotatef(angleY, 0, 1, 0);
-	glRotatef(angleZ, 0, 0, 1);
+    glRotatef(angleX, 1, 0, 0);
+    glRotatef(angleY, 0, 1, 0);
+    glRotatef(angleZ, 0, 0, 1);
 
-	// update and draw bodies.
-	world.drawBodies();
+    // update and draw bodies.
+    world.drawBodies();
 
     // astroidBody and planet2Body collide
     // TODO: MAGIC NUMBERS!!!! OMG!!!
@@ -270,24 +279,24 @@ void drawSceneOne() {
 
     // cameraBody and planet2Body collide
     if(cameraBody.getPosition().distance(planet2Body.getPosition()) < 6.25 ) {
-       // isAnimating = false; 
-       astroidBody.setPosition(0,0,0);
+        // isAnimating = false; 
+        astroidBody.setPosition(0,0,0);
     }
 
-	// planet2AtmosphereGlBody.draw(planet2Body.getPosition());
-	glDisable(GL_LIGHTING);
-	planet2AtmosphereGlBody.draw(planet2Body.getPosition());
+    // planet2AtmosphereGlBody.draw(planet2Body.getPosition());
+    glDisable(GL_LIGHTING);
+    planet2AtmosphereGlBody.draw(planet2Body.getPosition());
 
-	sunAtmosphereGlBody.draw(sunBody.getPosition());
-	backgroundGlBody.draw();
-	glEnable(GL_LIGHTING);
+    sunAtmosphereGlBody.draw(sunBody.getPosition());
+    backgroundGlBody.draw();
+    glEnable(GL_LIGHTING);
 }
 
 // Control points for the texture coordinates Bezier surface.
 static float texturePoints[2][2][2] =
 {
-	{ { 0.0, 0.0 },{ 0.0, 1.0 } },
-	{ { 1.0, 0.0 },{ 1.0, 1.0 } }
+    { { 0.0, 0.0 },{ 0.0, 1.0 } },
+    { { 1.0, 0.0 },{ 1.0, 1.0 } }
 };
 float height1 = 1.0f;
 float height2 = 2.0f;
@@ -330,47 +339,47 @@ void drawPettle(
         float z=0,
         int textureIndex=0,
         float alpha = 1) {
-	// Specify and enable the Bezier curve.
+    // Specify and enable the Bezier curve.
     // Control points for the texture coordinates Bezier surface.
-	glEnable(GL_MAP2_VERTEX_3);
-	glMapGrid2f(20, 0.0, 1.0, 20, 0.0, 1.0);
+    glEnable(GL_MAP2_VERTEX_3);
+    glMapGrid2f(20, 0.0, 1.0, 20, 0.0, 1.0);
 
-	// Draw the Bezier curve by defining a sample grid and evaluating on it.
-	// Enable Bezier surface with texture co-ordinates generation.
+    // Draw the Bezier curve by defining a sample grid and evaluating on it.
+    // Enable Bezier surface with texture co-ordinates generation.
     glMap2f(GL_MAP2_VERTEX_3, 0.0f, 1.0f, 3 , 4, 0.0f, 1.0f, 12, 4, cp);
-	glEnable(GL_MAP2_VERTEX_3);
-	glMap2f(GL_MAP2_TEXTURE_COORD_2, 0, 1, 2, 2, 0, 1, 4, 2, texturePoints[0][0]);
-	glEnable(GL_MAP2_TEXTURE_COORD_2);
+    glEnable(GL_MAP2_VERTEX_3);
+    glMap2f(GL_MAP2_TEXTURE_COORD_2, 0, 1, 2, 2, 0, 1, 4, 2, texturePoints[0][0]);
+    glEnable(GL_MAP2_TEXTURE_COORD_2);
 
-	// Map the texture onto the blade Bezier surface.
-	glBindTexture(GL_TEXTURE_2D, texture[textureIndex]);
+    // Map the texture onto the blade Bezier surface.
+    glBindTexture(GL_TEXTURE_2D, texture[textureIndex]);
 
     // Set the color, needed for transulcency
     glEnable(GL_COLOR_MATERIAL);
-        glColor4f(1, 1, 1, alpha);
+    glColor4f(1, 1, 1, alpha);
     glDisable(GL_COLOR_MATERIAL);
 
     glPushMatrix();
-        glTranslatef(x, y, z);
-        glRotatef(zAngle, 0, 0, 1);
-        if(isWire) {
-            glEvalMesh2(GL_LINE, 0, 5, 0, 5);
-        }
-        else {
-            // Enable texturing and filled polygon mode.
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                glEvalMesh2(GL_FILL, 0, 5, 0, 5);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        }
+    glTranslatef(x, y, z);
+    glRotatef(zAngle, 0, 0, 1);
+    if(isWire) {
+        glEvalMesh2(GL_LINE, 0, 5, 0, 5);
+    }
+    else {
+        // Enable texturing and filled polygon mode.
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glEvalMesh2(GL_FILL, 0, 5, 0, 5);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
     glPopMatrix();
 }
 
 void drawFlower(float pistilRadius, float stemRadius, float stemHeight,
-                GLUquadric* quad,
-                float xPos = 0, float yPos = 0, float zPos = 0) {
+        GLUquadric* quad,
+        float xPos = 0, float yPos = 0, float zPos = 0) {
     glTranslatef(xPos, yPos, zPos);
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     if(isWire)
         gluQuadricDrawStyle(quad, GLU_LINE);
@@ -379,26 +388,26 @@ void drawFlower(float pistilRadius, float stemRadius, float stemHeight,
     gluQuadricTexture(quad, GL_TRUE);
     /* // Draw pistil............................................................. */
     glEnable(GL_COLOR_MATERIAL);
-        glColor4f(1 , 1, 1, 1.0);
+    glColor4f(1 , 1, 1, 1.0);
     glDisable(GL_COLOR_MATERIAL);
 
 
-        glBindTexture(GL_TEXTURE_2D, texture[3]);
+    glBindTexture(GL_TEXTURE_2D, texture[7]);
 
-        gluSphere(quad, pistilRadius, 10, 10);
+    gluSphere(quad, pistilRadius, 10, 10);
 
 
     // Draw Stem...............................................................
     glEnable(GL_COLOR_MATERIAL);
-        glColor4f(1 , 1, 1, 0.8);
+    glColor4f(1 , 1, 1, 0.8);
     glDisable(GL_COLOR_MATERIAL);
-        glPushMatrix();
-            glTranslatef(0, 0, -stemHeight);
+    glPushMatrix();
+    glTranslatef(0, 0, -stemHeight);
 
-            glBindTexture(GL_TEXTURE_2D, texture[1]);
-            
-            gluCylinder(quad, stemRadius, stemRadius, stemHeight, 10, 10);
-        glPopMatrix();
+    glBindTexture(GL_TEXTURE_2D, texture[10]);
+
+    gluCylinder(quad, stemRadius, stemRadius, stemHeight, 10, 10);
+    glPopMatrix();
     gluDeleteQuadric(quad);
 
     // Draw pettles along the parameter for the pistil.........................
@@ -419,9 +428,9 @@ void drawFlower(float pistilRadius, float stemRadius, float stemHeight,
         z[i] = 0;
         t += 2 * PI / (float)count;
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        drawPettle(pettle2ControlPoints[0], count/2 + angle[i], x[i], y[i], z[i], 1, 0.8);
-        drawPettle(leafControlPoints[0], count/2 + angle[i] + 15, x[i], y[i], z[i], 2);
-        drawPettle(pettleControlPoints[0], count/2 + angle[i], x[i], y[i], z[i], 0, 0.8);
+        drawPettle(pettle2ControlPoints[0], count/2 + angle[i], x[i], y[i], z[i], 8, 0.8);
+        drawPettle(leafControlPoints[0], count/2 + angle[i] + 15, x[i], y[i], z[i], 9);
+        drawPettle(pettleControlPoints[0], count/2 + angle[i], x[i], y[i], z[i], 10, 0.8);
     }
 }
 
@@ -430,36 +439,36 @@ float stemRadius = 0.10;
 float stemHeight = 3;
 void drawFlowerAndReflection(float x, float y, float z) {
     glPushMatrix();
-        glTranslatef(x, y, z);
-        drawFlower(pistilRadius, stemRadius, stemHeight, gluNewQuadric());
+    glTranslatef(x, y, z);
+    drawFlower(pistilRadius, stemRadius, stemHeight, gluNewQuadric());
 
-        glPushMatrix();
-            glTranslatef(0, 0, -stemHeight*2);
-            glRotatef(180, 1, 0, 0);
-            drawFlower(pistilRadius, stemRadius, stemHeight, gluNewQuadric());
-        glPopMatrix();
+    glPushMatrix();
+    glTranslatef(0, 0, -stemHeight*2);
+    glRotatef(180, 1, 0, 0);
+    drawFlower(pistilRadius, stemRadius, stemHeight, gluNewQuadric());
+    glPopMatrix();
     glPopMatrix();
 }
 
-float astroidPosition = 150;
+float astroidPosition = 350;
 float explotionRadius = 1.0f;
 bool toDraw = true;
-float z = 10;
+float z = 0.10;
 void drawSceneTwo() {
-	glEnable(GL_LIGHT0); // Enable particular light source.
-	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_FALSE); // Enable local viewpoint.
+    glEnable(GL_LIGHT0); // Enable particular light source.
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_FALSE); // Enable local viewpoint.
 
-	glEnable(GL_LIGHT1); // Enable particular light source.
-	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_FALSE); // Enable local viewpoint.
+    glEnable(GL_LIGHT1); // Enable particular light source.
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_FALSE); // Enable local viewpoint.
 
     // setupSceneTwoLighting(); // find a more effecient way to do this.
     // sunGlBody.draw(); //use as placeholder explosion.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
+    glLoadIdentity();
 
-	gluLookAt(0.0, 0.0, z, astroidPosition, astroidPosition, -astroidPosition, 0.0, 1.0, 0.0);
+    gluLookAt(0.0, 0.0, z, astroidPosition, astroidPosition, -astroidPosition, 0.0, 1.0, 0.0);
 
-    if(z < 27) {
+    if(z < 40) {
         z += 0.1;
     }
 
@@ -479,8 +488,12 @@ void drawSceneTwo() {
     // std::cout << angleY << " ";
     // std::cout << angleZ << std::endl;
 
-    backgroundGlBody.draw();
+
     backgroundGlBody.setTexture(6);
+    backgroundGlBody.setColor(1,1,1,1);
+    glDisable(GL_LIGHTING);
+    backgroundGlBody.draw();
+    glEnable(GL_LIGHTING);
 
     glRotatef(angleX, 1.0, 0.0, 0.0);
     glRotatef(angleY, 0.0, 1.0, 0.0);
@@ -488,7 +501,7 @@ void drawSceneTwo() {
 
     std::cout << explotionRadius << std::endl;
     // Draw some flowers and their "reflections".
-    if(explotionRadius < 17){
+    if(explotionRadius < 20){
         drawFlowerAndReflection(0,0,0);
         drawFlowerAndReflection(12,0,0);
         drawFlowerAndReflection(-12,0,0);
@@ -508,17 +521,17 @@ void drawSceneTwo() {
 
     // Draw the "reflective" surface.
     glEnable(GL_COLOR_MATERIAL);
-        glColor4f(1.0 , 1.0, 1.0, 0.8); // Make transparent to display "reflections".
+    glColor4f(1.0 , 1.0, 1.0, 0.8); // Make transparent to display "reflections".
     glDisable(GL_COLOR_MATERIAL);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glBindTexture(GL_TEXTURE_2D, texture[1]);
+    glBindTexture(GL_TEXTURE_2D, texture[7]);
     glTranslatef(0, -50, 0);
     glBegin(GL_POLYGON);
-        glNormal3f(0,0,1); glTexCoord2f(0.0, 0.0); glVertex3f(-200.0, 0.0, -stemHeight);
-        glNormal3f(0,1,0); glTexCoord2f(1.0, 0.0); glVertex3f(200.0, 0.0, -stemHeight);
-        glNormal3f(1,0,0); glTexCoord2f(1.0, 1.0); glVertex3f(200.0, 240.0, -stemHeight);
-        glNormal3f(0,0,1); glTexCoord2f(0.0, 1.0); glVertex3f(-200.0, 240.0, -stemHeight);
+    glNormal3f(0,0,1); glTexCoord2f(0.0, 0.0); glVertex3f(-400.0, 0.0, -stemHeight);
+    glNormal3f(0,1,0); glTexCoord2f(1.0, 0.0); glVertex3f(400.0, 0.0, -stemHeight);
+    glNormal3f(1,0,0); glTexCoord2f(1.0, 1.0); glVertex3f(400.0, 440.0, -stemHeight);
+    glNormal3f(0,0,1); glTexCoord2f(0.0, 1.0); glVertex3f(-400.0, 440.0, -stemHeight);
     glEnd();
 
 }
@@ -526,7 +539,7 @@ void drawSceneTwo() {
 void drawScene() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glLoadIdentity();
+    glLoadIdentity();
     switch (currentScene) {
         case 1:
             drawSceneOne();
@@ -537,7 +550,7 @@ void drawScene() {
         default:
             std::cout << "scene not defined." << std::endl;
     }
-	glutSwapBuffers();
+    glutSwapBuffers();
 }
 
 // TODO: Fixed time step, check if it's framerate independent.
@@ -545,60 +558,60 @@ static int animationPeriod = 20; // Time interval between frames.
 
 // Timer function.
 void animate(int value) {
-	if (!isAnimating) {
-		return;
-	}
+    if (!isAnimating) {
+        return;
+    }
     globalTimeStep += 1;
     std::cout << globalTimeStep << std::endl;
 
-	glutTimerFunc(animationPeriod, animate, 1);
-	world.getDynamicsWorld()->stepSimulation(1 / 60.f, 10);
+    glutTimerFunc(animationPeriod, animate, 1);
+    world.getDynamicsWorld()->stepSimulation(1 / 60.f, 10);
 
-	moonBody.getRigidBody()->activate(true);
-	planet0Body.getRigidBody()->activate(true);
-	planet1Body.getRigidBody()->activate(true);
-	planet2Body.getRigidBody()->activate(true);
-	planet3Body.getRigidBody()->activate(true);
-	sunBody.getRigidBody()->activate(true);
-	
+    moonBody.getRigidBody()->activate(true);
+    planet0Body.getRigidBody()->activate(true);
+    planet1Body.getRigidBody()->activate(true);
+    planet2Body.getRigidBody()->activate(true);
+    planet3Body.getRigidBody()->activate(true);
+    sunBody.getRigidBody()->activate(true);
+
     // Rotate bodies.
-	moonBody.getRigidBody()->setAngularVelocity(btVector3(1, 0, 0));
-	planet0Body.getRigidBody()->setAngularVelocity(btVector3(1, 0, 0));
-	planet1Body.getRigidBody()->setAngularVelocity(btVector3(1, 1, 0));
-	planet2Body.getRigidBody()->setAngularVelocity(btVector3(0, -1, 0));
-	planet3Body.getRigidBody()->setAngularVelocity(btVector3(1, 1, 1));
-	sunBody.getRigidBody()->setAngularVelocity(btVector3(0, 1, 0));
+    moonBody.getRigidBody()->setAngularVelocity(btVector3(1, 0, 0));
+    planet0Body.getRigidBody()->setAngularVelocity(btVector3(1, 0, 0));
+    planet1Body.getRigidBody()->setAngularVelocity(btVector3(1, 1, 0));
+    planet2Body.getRigidBody()->setAngularVelocity(btVector3(0, -1, 0));
+    planet3Body.getRigidBody()->setAngularVelocity(btVector3(1, 1, 1));
+    sunBody.getRigidBody()->setAngularVelocity(btVector3(0, 1, 0));
 
     // Make objects revolve.
-	planet0Body.revolve(1000/4);
-	planet1Body.revolve(2000/4);
-	planet2Body.revolve(3000/4);
-	planet3Body.revolve(4000/4);
+    planet0Body.revolve(1000/4);
+    planet1Body.revolve(2000/4);
+    planet2Body.revolve(3000/4);
+    planet3Body.revolve(4000/4);
 
     // Revolve moon around planet2.
-	float x = planet2Body.getPosition().getX();
-	float y = planet2Body.getPosition().getY();
-	float z = planet2Body.getPosition().getZ();
-	moonBody.revolve(200, 10, x, y, z);
+    float x = planet2Body.getPosition().getX();
+    float y = planet2Body.getPosition().getY();
+    float z = planet2Body.getPosition().getZ();
+    moonBody.revolve(200, 10, x, y, z);
 
-	glutPostRedisplay();
+    glutPostRedisplay();
 }
 
 // OpenGL window reshape routine.
 void resize(int w, int h) {
-	glViewport(0, 0, w, h);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(80.0, (float)w / (float)h, 1.0, 400.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+    glViewport(0, 0, w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(80.0, (float)w / (float)h, 1.0, 400.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
-	// glViewport(0, 0, w, h);
-	// glMatrixMode(GL_PROJECTION);
-	// glLoadIdentity();
-	// glFrustum(-5.0, 5.0, -5.0, 5.0, 5.0, 200.0);
-	// glMatrixMode(GL_MODELVIEW);
-	// glLoadIdentity();
+    // glViewport(0, 0, w, h);
+    // glMatrixMode(GL_PROJECTION);
+    // glLoadIdentity();
+    // glFrustum(-5.0, 5.0, -5.0, 5.0, 5.0, 200.0);
+    // glMatrixMode(GL_MODELVIEW);
+    // glLoadIdentity();
 }
 
 // Keyboard input processing routine.
@@ -606,73 +619,73 @@ void keyInput(unsigned char key, int x, int y) {
     x = 0;
     y = 0;
 
-	switch (key) {
+    switch (key) {
         case 27:
             exit(0);
             break;
-		case ' ':
-			isAnimating = !isAnimating;
-			if (isAnimating){
-				animate(1);
-			}
-			break;
+        case ' ':
+            isAnimating = !isAnimating;
+            if (isAnimating){
+                animate(1);
+            }
+            break;
         case 'p':
             isAstroidMoving = true;
             break;
-		case 'l':
-			// planetBody.getRigidBody()->applyCentralImpulse(btVector3( 2,0,0 ));
-			break;	
-		case 'j':
-			// planet0Body.getRigidBody()->applyTorqueImpulse(btVector3(-2,0,0));
-			// planetBody.getRigidBody()->applyCentralImpulse(btVector3( -2,0,0 ));
-			break;	
-		case 'x':
-			angleX +=5;
-			glutPostRedisplay();
-			break;
-		case 'y':
-			angleY +=5;
-			glutPostRedisplay();
-			break;
-		case 'z':
-			angleZ +=5;
-			glutPostRedisplay();
-			break;
-		case 'X':
-			angleX -=5;
-			glutPostRedisplay();
-			break;
-		case 'Y':
-			angleY -=5;
-			glutPostRedisplay();
-			break;
-		case 'Z':
-			angleZ -=5;
-			glutPostRedisplay();
-			break;
+        case 'l':
+            // planetBody.getRigidBody()->applyCentralImpulse(btVector3( 2,0,0 ));
+            break;
+        case 'j':
+            // planet0Body.getRigidBody()->applyTorqueImpulse(btVector3(-2,0,0));
+            // planetBody.getRigidBody()->applyCentralImpulse(btVector3( -2,0,0 ));
+            break;
+        case 'x':
+            angleX +=5;
+            glutPostRedisplay();
+            break;
+        case 'y':
+            angleY +=5;
+            glutPostRedisplay();
+            break;
+        case 'z':
+            angleZ +=5;
+            glutPostRedisplay();
+            break;
+        case 'X':
+            angleX -=5;
+            glutPostRedisplay();
+            break;
+        case 'Y':
+            angleY -=5;
+            glutPostRedisplay();
+            break;
+        case 'Z':
+            angleZ -=5;
+            glutPostRedisplay();
+            break;
         default:
-			break;
-	}
+            break;
+    }
 }
 
 // Main routine.
 int main(int argc, char **argv) {
-	glutInit(&argc, argv);
+    glutInit(&argc, argv);
 
-	glutInitContextProfile(GLUT_COMPATIBILITY_PROFILE);
+    glutInitContextProfile(GLUT_COMPATIBILITY_PROFILE);
 
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutInitWindowSize(720, 480);
-	glutInitWindowPosition(100, 100);
-	glutCreateWindow("main1.cpp");
-	glutDisplayFunc(drawScene);
-	glutReshapeFunc(resize);
-	glutKeyboardFunc(keyInput);
+    glutInitWindowSize(720, 480);
+    glutInitWindowPosition(100, 100);
+    glutCreateWindow("main.cpp");
+    glutDisplayFunc(drawScene);
+    glutReshapeFunc(resize);
+    glutKeyboardFunc(keyInput);
 
-	glewExperimental = GL_TRUE;
-	glewInit();
+    glewExperimental = GL_TRUE;
+    glewInit();
 
-	setup();
+    setup();
 
-	glutMainLoop();
+    glutMainLoop();
 }
